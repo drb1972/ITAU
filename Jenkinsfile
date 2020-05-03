@@ -1,4 +1,9 @@
 pipeline {
+    agent { label 'zowe-agent' }
+    environment {
+        // z/OS Host Information
+        ZOWE_OPT_HOST=credentials('eosHost')
+    }
     stages {
         stage('Step1') {
             steps {
