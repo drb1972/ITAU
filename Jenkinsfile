@@ -1,8 +1,4 @@
 pipeline {
-    agent { label 'zowe-agent' }
-    environment {
-        // z/OS Host Information
-        }
     stages {
         stage('Step1') {
             steps {
