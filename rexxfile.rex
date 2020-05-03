@@ -1,5 +1,6 @@
 /* rexx */
 arg step
+interpret call step
 exit
 
 step1:
