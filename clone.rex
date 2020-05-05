@@ -5,6 +5,8 @@ exit
 
 all:
    call get_lib_info
+   return 
+
    call load_info
    call allocate_files
    call load_files
@@ -18,7 +20,6 @@ say 'STEPS '
 say '=================='
 say '<blank> to execute all'
 say 'get_lib_info'
-return 
 say 'load_info'
 say 'allocate_files'
 say 'load_files'
@@ -46,7 +47,7 @@ get_lib_info:
 
    say ''
    say '['||time()||']'
-   say 'Retrieving linfo from ITAUM Application'
+   say 'Retrieving info from ITAUM Application'
    com ='zowe zos-files list data-set "itaum*" -a --rfj 'prof'> libraries.json'
    say com
    interpret "'"com"'"
