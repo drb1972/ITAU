@@ -45,13 +45,15 @@ get_lib_info:
    say ''
    say '['||time()||']'
    say 'Retrieving info from ITAUM Application'
-   'zowe zos-files list data-set "itaum*" -a --rfj | RxQueue'
+   com = 'zowe zos-files list data-set "itaum*" -a --rfj'
+   interpret "'"com " | RxQueue'"
 
    output_file = 'libraries.json' 
    say 'Deleting ' output_file
    "rm "output_file
-   say rc
    call lineout output_file, , 1
+      say queued() rc
+
    do queued()
       pull json
       call lineout output_file, json
