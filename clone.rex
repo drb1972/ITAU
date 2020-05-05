@@ -1,9 +1,8 @@
 /* rexx - clone ITAUM Application */
 parse upper arg action
 call init
-
 exit
-say '['||time()||']'
+
 all:
    call get_lib_info
    call load_info
@@ -41,6 +40,7 @@ init:
 return
 
 get_lib_info:
+   say ''
    say '['||time()||']'
    say 'Retrieving linfo from ITAUM Application'
    com ='zowe zos-files list data-set "itaum*" -a --rfj > libraries.json'
@@ -49,6 +49,7 @@ get_lib_info:
 return
 
 load_info:
+   say ''
    say '['||time()||']'
    say 'Loading Data Set information'
    input_file  = 'libraries.json'
@@ -82,6 +83,7 @@ allocate_files:
    if action <> '' then do 
       call load_info
    end
+   say ''
    say '['||time()||']'
    say 'Allocating Files for 'clon 
    say 'Creating 'clon ||'.TEMP File'
@@ -187,6 +189,7 @@ load_files:
    if action <> '' then do 
       call load_info
    end
+   say ''
    say '['||time()||']'
    say 'Populating Fields'
    do i = 1 to dsname.0
@@ -197,19 +200,17 @@ load_files:
          when pos('.LOAD'  ,dsname.i) > 0 then iterate
          when pos('.OBJECT',dsname.i) > 0 then iterate
          when pos('.IMS'   ,dsname.i) > 0 then iterate
-         -- when pos('.CICS'  ,dsname.i) > 0 then iterate
-         -- when pos('.DBRM'  ,dsname.i) > 0 then iterate
          when pos('.COPY'  ,dsname.i) > 0 then call copy_and_replace
          when pos('.JCL'   ,dsname.i) > 0 then call copy_and_replace
          when pos('.COBOL' ,dsname.i) > 0 then do 
             call copy_and_replace
-            -- call compile
+            call compile
          end
          when dsname.i.dsorg = 'PS' then 'zowe zos-files copy data-set "'||dsname.i||'" "'||dsname.i.clon||'"'
-         when dsname.i.dsorg = 'PDS' then iterate
-         when dsname.i.dsntp = 'PDS' then iterate
+         when dsname.i.dsorg = 'PDS' then call iebcopy
+         when dsname.i.dsntp = 'LIBRARY' then call iebcopy
 
-         when dsname.i.dsorg = 'VS' then iterate
+         when dsname.i.dsorg = 'VS' then call repro
          otherwise nop
       end
    end
@@ -270,6 +271,61 @@ repro:
    com ="zowe zos-jobs submit local-file temp.jcl --vasc"; interpret '"'com'"'
 return
 
+iebcopy:
+   drop jcl.
+   jcl = 0
+   jcl=jcl+1 ; jcl.jcl = '//ITAUIEBC JOB (40600000),CLASS=A,MSGCLASS=X'
+   jcl=jcl+1 ; jcl.jcl = '//JOBSTEP  EXEC  PGM=IEBCOPY'
+   jcl=jcl+1 ; jcl.jcl = '//SYSPRINT DD  SYSOUT=A'
+   jcl=jcl+1 ; jcl.jcl = '//SYSUT1   DD  DSNAME='|| dsname.i ||','
+   jcl=jcl+1 ; jcl.jcl = '//             DISP=SHR'
+   jcl=jcl+1 ; jcl.jcl = '//SYSUT2   DD  DSNAME='|| dsname.i.clon ||','
+   jcl=jcl+1 ; jcl.jcl = '//             DISP=SHR'
+   jcl.0 = jcl
+   "rm temp.jcl"
+   output_file = 'temp.jcl' 
+   call lineout output_file, , 1
+   do j = 1 to jcl.0
+      call lineout output_file, jcl.j
+   end
+   call lineout output_file
+
+   com ="zowe zos-jobs submit local-file temp.jcl --vasc"; interpret '"'com'"'
+return
+
+compile:
+   com ='zowe zos-files list all-members "'dsname.i.clon'"'
+   interpret "'"com"  | RxQueue'"
+
+   member.0 = queued()
+   input_file  = 'comp.jcl'
+   output_file = 'temp.jcl' 
+   do i=1 to member.0
+      member.i = linein("QUEUE:")
+      /* Open output for writing */
+      call lineout output_file, , 1
+      /* Read lines in loop and process them */
+      do while lines(input_file) \= 0
+         line = linein(input_file)
+         if pos("&env",line) > 0 then do
+            parse var line head '&env' tail
+            line = head || clon || tail
+         end 
+         if pos("&member",line) > 0 then do
+            parse var line head '&member' tail
+            line = head || member.i || tail
+         end 
+         /* write line to the output file */
+         call lineout output_file, line
+         say line
+      end
+      /* close all files */
+      call lineout output_file
+      call lineout input_file
+      com ="zowe zos-jobs submit local-file temp.jcl"; interpret '"'com'"'
+   end
+return
+
 replace_string:
    retstring  = arg(1)                                               
    arg2length = length(arg(2))                                       
@@ -281,4 +337,4 @@ replace_string:
       arg(3)||,                                                         
       substr(retstring,look4_pos+arg2length)                            
    end                                                               
-return retstring                                                  
+return retstring
