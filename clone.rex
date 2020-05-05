@@ -5,8 +5,6 @@ exit
 
 all:
    call get_lib_info
-   return 
-
    call load_info
    call allocate_files
    call load_files
@@ -48,6 +46,7 @@ get_lib_info:
    say ''
    say '['||time()||']'
    say 'Retrieving info from ITAUM Application'
+   'dir'
    com ='zowe zos-files list data-set "itaum*" -a --rfj 'prof'> libraries.json'
    say com
    interpret "'"com"'"
