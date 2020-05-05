@@ -104,7 +104,7 @@ allocate_files:
                " --rf " dsname.i.recfm ,
                " --rl " dsname.i.lrecl ,
                " --sz " dsname.i.sizex ,
-               " --dst" dsname.i.dsntp ,
+               -- " --dst" dsname.i.dsntp ,
                " --ss 15" prof
             interpret '"'com'"'
          end
@@ -116,7 +116,7 @@ allocate_files:
                " --rl " dsname.i.lrecl ,
                " --sz " dsname.i.sizex ,
                " --dst" dsname.i.dsntp ,
-               " --ss 15" prof
+               " --ss 15"
             interpret '"'com'"'
          end
          /* PDS-E Libraries */
