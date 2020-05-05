@@ -27,7 +27,7 @@ return
 
 init:
    /*dxr*/
-prof = ' --host sr01brs.lvn.broadcom.net --port 443 --user roddi01 --pass Praga345 --reject-unauthorized false --ow'
+prof = ' --host sr01brs.lvn.broadcom.net --port 443 --user roddi01 --pass Praga345 --reject-unauthorized false '
    "clear"
    say '['||time()||']'
    say 'Reading Config'
@@ -47,7 +47,7 @@ get_lib_info:
    say '['||time()||']'
    say 'Retrieving info from ITAUM Application'
    'dir'
-   com ='zowe zos-files list data-set "itaum*" -a --rfj 'prof'> libraries.json'
+   com ='zowe zos-files list data-set "itaum*" -a --rfj 'prof' > libraries.json'
    say com
    interpret "'"com"'"
 return
