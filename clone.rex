@@ -43,7 +43,7 @@ get_lib_info:
 
       'bright profiles create zosmf-profile zosmf-sr01brs --host sr01brs.lvn.broadcom.net --port 443 --user roddi01 --pass Praga345 --reject-unauthorized false --ow'
       'bright profiles create tso-profile tso-sr01brs --account ACCT# --region-size 250000 --logon-procedure CATSO --ow'
-
+      zowe profiles list zosmf
    say ''
    say '['||time()||']'
    say 'Retrieving linfo from ITAUM Application'
