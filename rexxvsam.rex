@@ -436,13 +436,14 @@ Return
  *------------------------------------------------------------*
  */
 init_variables:
-if sysvar("SYSISPF")�="ACTIVE" then do
+/*
+if sysvar("SYSISPF")<>"ACTIVE" then do
    say "Usage: %VC3 <ENTRY> pds member"
    say "-pds- & -member- are optional."
    say "MUST run under ISPF!"
    exit 8
    end
-
+*/
 drop trap_line.                        /* trapped from listcat */
 drop out_line.                         /* output array */
 drop state                             /* currently parsing this */
@@ -475,7 +476,7 @@ gencount:
 
     /* Special Case: Empty CONTROL CARDS dataset */
     dummy = msg("OFF")
-    if sysdsn('VSAM.MEMBERS') �= "OK" then do
+    if sysdsn('VSAM.MEMBERS') <> "OK" then do
        return VSAM0001
        end
     dummy = msg("ON")
@@ -492,7 +493,8 @@ gencount:
        lastmem = control.i
        lastmem = strip(lastmem,," ")
        lastmem = substr(lastmem,5)
-       if �datatype(lastmem,"NUM") then num = "0001"
+       say 'dxr 'datatype(lastmem,"NUM")
+       if datatype(lastmem,"NUM") then num = "0001"
        else                             num = lastmem+1
        if length(num) = 1 then num = "000" || num
        if length(num) = 2 then num =  "00" || num
