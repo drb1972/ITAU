@@ -203,7 +203,7 @@ load_files:
             call copy_and_replace
             call compile
          end
-         when dsname.i.dsorg = 'PS' then 'zowe zos-files copy data-set "'||dsname.i||'" "'||dsname.i.clon||'"'
+         when dsname.i.dsorg = 'PS' then 'zowe zos-files copy-data-set "'||dsname.i||'" "'||dsname.i.clon||'"'
          when dsname.i.dsorg = 'PDS' then call iebcopy
          when dsname.i.dsntp = 'LIBRARY' then call iebcopy
 
