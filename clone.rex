@@ -48,7 +48,9 @@ get_lib_info:
    'zowe zos-files list data-set "itaum*" -a --rfj | RxQueue'
 
    output_file = 'libraries.json' 
+   say 'Deleting ' output_file
    "rm "output_file
+   say rc
    call lineout output_file, , 1
    do queued()
       pull json
