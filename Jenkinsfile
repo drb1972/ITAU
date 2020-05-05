@@ -1,25 +1,25 @@
 pipeline {
     agent any
     stages {
-        stage('Step1') {
+        stage('get_lib_info') {
             steps {
                     sh 'rexx clone get_lib_info'
                 }
             }
 
-        stage('Step2') {
+        stage('load_info') {
             steps {
                     sh 'rexx clone load_info'
                 }
             }
 
-        stage('Step3') {
+        stage('allocate_files') {
             steps {
                     sh 'rexx clone allocate_files'
                 }
             }
 
-        stage('Step4') {
+        stage('load_files') {
             steps {
                     sh 'rexx clone load_files'
                 }
