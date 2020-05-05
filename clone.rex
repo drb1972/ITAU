@@ -46,7 +46,7 @@ get_lib_info:
    say '['||time()||']'
    say 'Retrieving info from ITAUM Application'
    'zowe zos-files list data-set "itaum*" -a --rfj | RxQueue'
-   output_file = ' libraries.json' 
+   output_file = 'libraries.json' 
    call lineout output_file, , 1
    do queued()
       pull var
