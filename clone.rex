@@ -45,9 +45,15 @@ get_lib_info:
    say ''
    say '['||time()||']'
    say 'Retrieving info from ITAUM Application'
-   'dir'
-   'zowe zos-files list data-set "itaum*" -a --rfj > libraries.json'
-      
+   'zowe zos-files list data-set "itaum*" -a --rfj | RxQueue'
+   output_file = ' libraries.json' 
+   call lineout output_file, , 1
+   do queued()
+      pull var
+      call lineout output_file, var
+   end
+   call lineout output_file
+
 return
 
 load_info:
@@ -111,7 +117,6 @@ allocate_files:
                " --rf " dsname.i.recfm ,
                " --rl " dsname.i.lrecl ,
                " --sz " dsname.i.sizex ,
-               " --dst" dsname.i.dsntp ,
                " --ss 15"
             interpret '"'com'"'
          end
