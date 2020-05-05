@@ -27,7 +27,6 @@ return
 
 init:
    /*dxr*/
-prof = ' --host sr01brs.lvn.broadcom.net --port 443 --user roddi01 --pass Praga345 --reject-unauthorized false '
    "clear"
    say '['||time()||']'
    say 'Reading Config'
@@ -47,9 +46,8 @@ get_lib_info:
    say '['||time()||']'
    say 'Retrieving info from ITAUM Application'
    'dir'
-   com ='zowe zos-files list data-set "itaum*" -a --rfj 'prof' > libraries.json'
-   say com
-   interpret "'"com"'"
+   'zowe zos-files list data-set "itaum*" -a --rfj > libraries.json'
+      
 return
 
 load_info:
@@ -91,8 +89,8 @@ allocate_files:
    say '['||time()||']'
    say 'Allocating Files for 'clon 
    say 'Creating 'clon ||'.TEMP File'
-   com ="zowe zos-files create classic "clon||".TEMP --bs 6160 --dst LIBRARY --rf FB --rl 80 --sz 1 --ss 1" prof; interpret '"'com'"'
-   com ='zowe zos-files upload file-to-data-set rexxvsam.rex "'|| clon ||'.TEMP(REXXVSAM)"' prof; interpret "'"com"'"
+   com ="zowe zos-files create classic "clon||".TEMP --bs 6160 --dst LIBRARY --rf FB --rl 80 --sz 1 --ss 1" ; interpret '"'com'"'
+   com ='zowe zos-files upload file-to-data-set rexxvsam.rex "'|| clon ||'.TEMP(REXXVSAM)"' ; interpret "'"com"'"
 /*dxr*/
    do i = 1 to dsname.0
       say 'Creating 'dsname.i.clon
@@ -103,9 +101,7 @@ allocate_files:
                " --bs " dsname.i.blksz ,
                " --rf " dsname.i.recfm ,
                " --rl " dsname.i.lrecl ,
-               " --sz " dsname.i.sizex ,
-               -- " --dst" dsname.i.dsntp ,
-               " --ss 15" prof
+               " --sz " dsname.i.sizex 
             interpret '"'com'"'
          end
          /* PDS Libraries */
