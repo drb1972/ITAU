@@ -54,6 +54,7 @@ get_lib_info:
    call lineout output_file, , 1
    do queued()
       pull json
+      say json
       call lineout output_file, json
    end
    call lineout output_file
