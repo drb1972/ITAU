@@ -26,7 +26,6 @@ say '['||time()||']'
 return
 
 init:
-   /*dxr*/
    "clear"
    say '['||time()||']'
    say 'Reading Config'
@@ -51,6 +50,9 @@ return
 load_info:
    say ''
    say '['||time()||']'
+
+   call create_alias
+
    say 'Loading Data Set information'
    input_file  = 'libraries.json'
    drop dsname.
@@ -89,7 +91,6 @@ allocate_files:
    say 'Creating 'clon ||'.TEMP File'
    com ="zowe zos-files create classic "clon||".TEMP --bs 6160 --dst LIBRARY --rf FB --rl 80 --sz 1 --ss 1" ; interpret '"'com'"'
    com ='zowe zos-files upload file-to-data-set rexxvsam.rex "'|| clon ||'.TEMP(REXXVSAM)"' ; interpret "'"com"'"
-/*dxr*/
    do i = 1 to dsname.0
       say 'Creating 'dsname.i.clon
       select 
@@ -199,18 +200,17 @@ load_files:
          when pos('.IMS'   ,dsname.i) > 0 then iterate
          when pos('.COPY'  ,dsname.i) > 0 then call copy_and_replace
          when pos('.JCL'   ,dsname.i) > 0 then call copy_and_replace
-         when pos('.COBOL' ,dsname.i) > 0 then do 
-            call copy_and_replace
-            call compile
-         end
-         when dsname.i.dsorg = 'PS' then 'zowe zos-files copy data-set "'||dsname.i||'" "'||dsname.i.clon||'"'
+         when pos('.COBOL' ,dsname.i) > 0 then call copy_and_replace
+         when dsname.i.dsorg = 'PS' then call iebgener
          when dsname.i.dsorg = 'PDS' then call iebcopy
          when dsname.i.dsntp = 'LIBRARY' then call iebcopy
-
          when dsname.i.dsorg = 'VS' then call repro
          otherwise nop
       end
    end
+   do i = 1 to dsname.0
+      if pos('.COBOL' ,dsname.i) > 0 then call compile
+   end   
 return
 
 copy_and_replace:
@@ -230,8 +230,10 @@ copy_and_replace:
       jcl=jcl+1 ; jcl.jcl = '//SYSOUT   DD SYSOUT=*'
       jcl=jcl+1 ; jcl.jcl = '//SYSPRINT DD SYSOUT=*'
       jcl=jcl+1 ; jcl.jcl = '//SYSIN DD *'
-      jcl=jcl+1 ; jcl.jcl = ' OPTION COPY'
-      jcl=jcl+1 ; jcl.jcl = " OUTREC FINDREP=(IN=C'ITAUM',OUT=C'"|| clon ||"')"
+      jcl=jcl+1 ; jcl.jcl = " OPTION COPY"
+      jcl=jcl+1 ; jcl.jcl = " INREC FINDREP=(INOUT=(C'ITAUM',C'"||clon||"',"
+      jcl=jcl+1 ; jcl.jcl = "                       C'DB2M',C'"||db2||"'))"
+
       jcl.0 = jcl
       "rm temp.jcl"
       output_file = 'temp.jcl' 
@@ -256,6 +258,30 @@ repro:
    jcl=jcl+1 ; jcl.jcl = '//SYSIN DD *'
    jcl=jcl+1 ; jcl.jcl = ' REPRO INFILE(IN) -'
    jcl=jcl+1 ; jcl.jcl = ' OUTFILE(OUT)'
+   jcl.0 = jcl
+   "rm temp.jcl"
+   output_file = 'temp.jcl' 
+   call lineout output_file, , 1
+   do j = 1 to jcl.0
+      call lineout output_file, jcl.j
+   end
+   call lineout output_file
+
+   com ="zowe zos-jobs submit local-file temp.jcl --vasc"; interpret '"'com'"'
+return
+
+iebgener:
+   drop jcl.
+   jcl = 0
+   jcl=jcl+1 ; jcl.jcl = '//ITAUIEBC JOB (40600000),CLASS=A,MSGCLASS=X'
+   jcl=jcl+1 ; jcl.jcl = '//JOBSTEP  EXEC  PGM=IEBGENER'
+   jcl=jcl+1 ; jcl.jcl = '//SYSPRINT DD  SYSOUT=A'
+   jcl=jcl+1 ; jcl.jcl = '//SYSUT1   DD  DSNAME='|| dsname.i ||','
+   jcl=jcl+1 ; jcl.jcl = '//             DISP=SHR'
+   jcl=jcl+1 ; jcl.jcl = '//SYSUT2   DD  DSNAME='|| dsname.i.clon ||','
+   jcl=jcl+1 ; jcl.jcl = '//             DISP=SHR'
+   jcl=jcl+1 ; jcl.jcl = '//SYSIN    DD DUMMY'
+
    jcl.0 = jcl
    "rm temp.jcl"
    output_file = 'temp.jcl' 
@@ -335,3 +361,45 @@ replace_string:
       substr(retstring,look4_pos+arg2length)                            
    end                                                               
 return retstring
+
+create_alias:
+   
+   say 'Creating Alias 'clon 'if doesn''t exist'
+
+   masterc = ICF.MASTER.VCATLOG
+   userc   = ICF.MINI.USERCAT
+   alias   = "'"clon"'"
+
+   'zowe tso issue command --ssm "LISTC ENT('alias') ALIAS" | RxQueue'
+   jcl = 0
+   drop jcl.
+   do queued()
+      pull var; say '> 'var
+      select 
+         when pos("ALIAS",var) > 0 then do
+            say 'ALIAS 'env ' exists'
+         end
+         when pos("NOT FOUND",var) > 0 then do 
+            jcl=jcl+1 ; jcl.jcl = '//CREALIAS JOB (40600000),CLASS=A,MSGCLASS=X'
+            jcl=jcl+ 1; jcl.jcl = '//STEP1     EXEC  PGM=IDCAMS'
+            jcl=jcl+ 1; jcl.jcl = '//SYSPRINT  DD    SYSOUT=A'
+            jcl=jcl+ 1; jcl.jcl = '//SYSIN     DD    *'
+            jcl=jcl+ 1; jcl.jcl = '     DEFINE ALIAS -'
+            jcl=jcl+ 1; jcl.jcl = '           (NAME('clon') -'
+            jcl=jcl+ 1; jcl.jcl = '            RELATE('userc')) -'
+            jcl=jcl+ 1; jcl.jcl = '            CATALOG('masterc')'
+
+            jcl.0 = jcl
+            "rm temp.jcl"
+            output_file = 'temp.jcl' 
+            call lineout output_file, , 1
+            do j = 1 to jcl.0
+               call lineout output_file, jcl.j
+            end
+            call lineout output_file
+            com ="zowe zos-jobs submit local-file temp.jcl --vasc"; interpret '"'com'"'
+         end
+         otherwise nop
+      end
+   end
+   return

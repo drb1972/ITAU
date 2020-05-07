@@ -1,7 +1,7 @@
 /* rexx */
 config: 
-   queue 'CLON = "ITAU7"'
-   queue 'DB2  = "DB27"'
-   queue 'IMS  = "IMS7"'
-   queue 'CICS = "CICS7"'
+   queue 'CLON = "ITAU8"'
+   queue 'DB2  = "DB28"'
+   queue 'IMS  = "IMS8"'
+   queue 'CICS = "CICS8"'
 return
