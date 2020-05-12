@@ -162,7 +162,6 @@ allocate_files:
                say jcl '> 'sysin
             end
             jcl.0 = jcl
-            say 'jcl.0' jcl.0
             "rm temp.jcl"
             output_file = 'temp.jcl' 
             call lineout output_file, , 1

@@ -1,8 +1,27 @@
-//ITAUREPR JOB (40600000),CLASS=A,MSGCLASS=X
-//STEP1  EXEC PGM=IDCAMS 
-//IN  DD DSN=ITAUM.VSAM1,DISP=SHR
-//OUT DD DSN=ITAU8.VSAM1,DISP=SHR
+//ITAUVSAM JOB (40600000),CLASS=A,MSGCLASS=X
+//DEFVSAM  EXEC PGM=IDCAMS
 //SYSPRINT DD SYSOUT=*
-//SYSIN DD *
- REPRO INFILE(IN) -
- OUTFILE(OUT)
+//SYSIN    DD *
+   DEFINE CLUSTER ( -
+       NAME(ITAU8.VSAM1) -
+            INDEXED -
+            STORAGECLASS(USER) -
+            DATACLASS(USER) -
+            SHAREOPTIONS(1,3) -
+       ) -
+   DATA( -
+       NAME(ITAU8.VSAM1.DATA) -
+            BUFFERSPACE(12288) -
+            CONTROLINTERVALSIZE(4096) -
+            KEYS(6 1) -
+            RECORDSIZE(80 80) -
+            TRACK(1 1) -
+            VOLUMES(USER03) -
+       ) -
+   INDEX( -
+       NAME(ITAU8.VSAM1.INDEX) -
+            CONTROLINTERVALSIZE(4096) -
+            TRACK(1 1) -
+            VOLUMES(USER03) -
+            )
+ 
